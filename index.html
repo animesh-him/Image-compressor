@@ -1,0 +1,227 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Image Compressor – Concept by Animesh</title>  <!-- ANIMATED BACKGROUND -->  <style>
+    body.animated-bg {
+      background: linear-gradient(-45deg, #ffecd2, #fcb69f, #ff9a9e, #fad0c4);
+      background-size: 400% 400%;
+      animation: gradientMove 15s ease infinite;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      color: #222;
+    }
+    @keyframes gradientMove {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .container {
+      width: 95%;
+      max-width: 900px;
+      margin: 40px auto;
+      background: #ffffffaa;
+      padding: 25px;
+      border-radius: 14px;
+      box-shadow: 0 4px 25px rgba(0,0,0,0.2);
+      backdrop-filter: blur(6px);
+    }
+
+    h1 { text-align: center; font-size: 28px; margin-bottom: 20px; }
+    .upload-area {
+      border: 2px dashed #444;
+      padding: 25px;
+      text-align: center;
+      border-radius: 12px;
+      cursor: pointer;
+      background: #fafafa;
+    }
+
+    #preview-area { margin-top: 25px; }
+
+    .image-card {
+      background: white;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+      margin-bottom: 15px;
+    }
+
+    .row { display: flex; gap: 20px; }
+    .col { flex: 1; }
+
+    .buttons { margin-top: 15px; display: flex; gap: 12px; }
+
+    button {
+      padding: 10px 15px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 15px;
+      background: #ff7a59;
+      color: white;
+      transition: 0.3s;
+    }
+    button:hover { opacity: 0.8; }
+
+    .download-link {
+      margin-top: 10px;
+      display: inline-block;
+      background: #4caf50;
+      color: white;
+      padding: 8px 12px;
+      border-radius: 6px;
+      text-decoration: none;
+    }
+
+    .small-credit {
+      text-align: center;
+      font-size: 10px;
+      opacity: 0.6;
+      margin-top: 30px;
+    }
+  </style></head><body class="animated-bg">
+  <div class="container">
+    <h1>Ultra Image Compressor</h1><div id="upload-area" class="upload-area">
+  <p>Click or Drag & Drop images here</p>
+  <input type="file" id="file-input" accept="image/*" multiple style="display:none;" />
+</div>
+
+<div style="margin-top:20px;">
+  <label>Compression Level:</label>
+  <input type="range" id="quality-slider" min="5" max="95" value="80" />
+  <span id="quality-label">80%</span>
+</div>
+
+<div id="preview-area"></div>
+
+<div style="margin-top:25px; text-align:center;">
+  <button id="download-zip">Download All as ZIP</button>
+</div>
+
+  </div>  <div class="small-credit">Concept by Animesh</div><script>
+// ---------------- DRAG + CLICK UPLOAD ----------------
+const uploadArea = document.getElementById("upload-area");
+const fileInput = document.getElementById("file-input");
+const previewArea = document.getElementById("preview-area");
+const qualitySlider = document.getElementById("quality-slider");
+const qualityLabel = document.getElementById("quality-label");
+
+uploadArea.onclick = () => fileInput.click();
+
+uploadArea.addEventListener("dragover", e => {
+  e.preventDefault();
+  uploadArea.style.background = "#e9e9e9";
+});
+
+uploadArea.addEventListener("dragleave", () => {
+  uploadArea.style.background = "#fafafa";
+});
+
+uploadArea.addEventListener("drop", e => {
+  e.preventDefault();
+  uploadArea.style.background = "#fafafa";
+  handleFiles(e.dataTransfer.files);
+});
+
+fileInput.onchange = () => handleFiles(fileInput.files);
+
+// ---------------- HANDLE FILES ----------------
+function handleFiles(files) {
+  [...files].forEach(file => processImage(file));
+}
+
+// ---------------- PROCESS EACH IMAGE ----------------
+async function processImage(file) {
+  const reader = new FileReader();
+  reader.readAsDataURL(file);
+  reader.onload = async () => {
+    const img = new Image();
+    img.src = reader.result;
+    img.onload = async () => {
+
+      let originalSize = (file.size / 1024 / 1024).toFixed(2);
+      let card = document.createElement("div");
+      card.className = "image-card";
+      card.innerHTML = `
+        <div class='row'>
+          <div class='col'><strong>Original:</strong><br><img src='${img.src}' style='max-width:100%;border-radius:8px;'><br>${originalSize} MB</div>
+          <div class='col'><strong>Optimized:</strong><br><span class='optimized-output'>Processing...</span></div>
+        </div>
+        <div class='buttons'>
+          <button class='same-format'>Best Reduced (Same Format)</button>
+          <button class='least-size'>Least Size Possible (WebP)</button>
+        </div>
+      `;
+
+      previewArea.appendChild(card);
+
+      const outBox = card.querySelector(".optimized-output");
+      const btnSame = card.querySelector(".same-format");
+      const btnLeast = card.querySelector(".least-size");
+
+      btnSame.onclick = () => optimizeImage(img, file.type, outBox, false);
+      btnLeast.onclick = () => optimizeImage(img, "image/webp", outBox, true);
+    }
+  }
+}
+
+// ---------------- OPTIMIZE IMAGE ----------------
+async function optimizeImage(img, mimeType, outputBox, isLeast) {
+  quality = qualitySlider.value / 100;
+
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+
+  let w = img.width;
+  let h = img.height;
+
+  if (isLeast) {
+    w = Math.floor(img.width * 0.65);
+    h = Math.floor(img.height * 0.65);
+  }
+
+  canvas.width = w;
+  canvas.height = h;
+  ctx.drawImage(img, 0, 0, w, h);
+
+  const dataURL = canvas.toDataURL(mimeType, quality);
+  const blob = await (await fetch(dataURL)).blob();
+
+  let newSize = (blob.size / 1024 / 1024).toFixed(2);
+  let reduction = ((1 - blob.size / (img.src.length * 0.75)) * 100).toFixed(1);
+
+  outputBox.innerHTML = `
+    <img src='${dataURL}' style='max-width:100%;border-radius:8px;'>
+    <br>${newSize} MB (${reduction}% smaller)
+    <br><a class='download-link' download='optimized.${mimeType.split("/")[1]}' href='${dataURL}'>Download</a>
+  `;
+
+  addToZip(dataURL, mimeType);
+}
+
+// ---------------- ZIP FUNCTIONALITY ----------------
+let zipFiles = [];
+
+function addToZip(dataURL, mimeType) {
+  zipFiles.push({ dataURL, mimeType });
+}
+
+document.getElementById("download-zip").onclick = async () => {
+  const zip = new JSZip();
+  let i = 1;
+  for (let file of zipFiles) {
+    const blob = await (await fetch(file.dataURL)).blob();
+    zip.file(`image_${i}.${file.mimeType.split("/")[1]}`, blob);
+    i++;
+  }
+  const content = await zip.generateAsync({ type: "blob" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(content);
+  a.download = "compressed_images.zip";
+  a.click();
+};
+</script><script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script></body>
+</html>
