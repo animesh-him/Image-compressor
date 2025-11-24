@@ -37,14 +37,18 @@
 
 /* Drag Area */
 .drop-zone {
-    width: 100%;
-    padding: 30px;
+    width: 160px;
+    height: 80px;
     border: 2px dashed #FF66CC;
     border-radius: 15px;
     text-align: center;
-    margin-bottom: 20px;
+    margin: 10px auto 20px auto;
     background: rgba(255,255,255,0.06);
-    font-size: 14px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
 }
 
 .btn {
@@ -87,14 +91,22 @@
 </div><script>
 let selectedFile = null;
 
-// Drag events
 const dropZone = document.getElementById("dropZone");
+
+// Drag events
+
 dropZone.addEventListener("dragover", (e)=>{ e.preventDefault(); dropZone.style.borderColor="#fff"; });
 dropZone.addEventListener("dragleave", ()=>{ dropZone.style.borderColor="#FF66CC"; });
 dropZone.addEventListener("drop", (e)=>{
     e.preventDefault();
     selectedFile = e.dataTransfer.files[0];
     processFile();
+});
+
+// CLICK OPENS FILE SELECTOR
+
+dropZone.addEventListener("click", ()=>{
+    document.getElementById("fileInput").click();
 });
 
 document.getElementById("fileInput").addEventListener("change", function(){
