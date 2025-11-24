@@ -1,16 +1,32 @@
-<!-- FULL FINAL INDEX.HTML WITH ALL FEATURES REQUESTED BY USER --><!DOCTYPE html><html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Ultra Image Reducer – Same Format Only</title><style>
+    :root {
+        --bg-dark: linear-gradient(120deg, #050505, #140022, #050505);
+        --bg-light: #f5f5f5;
+        --text-dark: #ffffff;
+        --text-light: #000000;
+        --card-dark: rgba(255,255,255,0.08);
+        --card-light: #ffffff;
+    }
+
     body {
         margin: 0;
         font-family: Arial, sans-serif;
-        color: #fff;
         overflow-x: hidden;
-        background: linear-gradient(120deg, #0d0d0d, #1a002b, #0d0d0d);
+        background: var(--bg-dark);
         background-size: 400% 400%;
         animation: bgMove 10s ease infinite;
+        color: var(--text-dark);
+        transition: 0.4s;
+    }
+
+    body.light-mode {
+        background: var(--bg-light);
+        color: var(--text-light);
+        animation: none;
     }
 
     @keyframes bgMove {
@@ -20,38 +36,52 @@
     }
 
     .container {
-        max-width: 600px;
+        max-width: 650px;
         margin: auto;
         margin-top: 20px;
-        background: rgba(255,255,255,0.06);
+        background: var(--card-dark);
         padding: 20px;
         border-radius: 14px;
-        box-shadow: 0 0 20px rgba(255,255,255,0.15);
         backdrop-filter: blur(6px);
+        transition: 0.4s;
     }
+
+    body.light-mode .container { background: var(--card-light); }
 
     h2 { text-align: center; }
 
-    #upload { width: 100%; margin-top: 12px; }
+    #dropZone {
+        width: 100%;
+        padding: 30px;
+        text-align: center;
+        border: 2px dashed #888;
+        border-radius: 12px;
+        margin-top: 15px;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+
+    #dropZone:hover { background: rgba(255,255,255,0.1); }
+
+    .toggle-btn {
+        float: right;
+        margin-top: -10px;
+        margin-right: 5px;
+        cursor: pointer;
+        padding: 8px 14px;
+        border-radius: 10px;
+        background: #444;
+        color: white;
+        border: none;
+        font-size: 12px;
+    }
+
+    body.light-mode .toggle-btn { background: #ccc; color:black; }
 
     .slider-box { width: 100%; margin-top: 20px; }
-
     .slider-box input { width: 100%; }
 
     .label-row { display: flex; justify-content: space-between; }
-
-    #preview, #preview-reduced { max-width: 100%; margin-top: 14px; border-radius: 10px; }
-
-    .status { margin-top: 10px; font-size: 14px; font-weight: bold; }
-
-    .note { font-size: 12px; opacity: 0.8; margin-top: 6px; }
-
-    button {
-        width: 100%; padding: 12px; margin-top: 20px;
-        background: linear-gradient(45deg,#ff00cc,#4e00ff);
-        border: none; border-radius: 10px; color: #fff;
-        font-size: 16px; cursor: pointer;
-    }
 
     .progress-bar {
         width: 100%; height: 10px; background: #222;
@@ -61,7 +91,7 @@
 
     .progress-inner {
         height: 100%; width: 0%; background: linear-gradient(45deg,#00ff99,#00ccff);
-        animation: loading 2s infinite;
+        animation: loading 1.4s infinite;
     }
 
     @keyframes loading {
@@ -69,18 +99,38 @@
         100% { transform: translateX(100%); }
     }
 
-    .download-btn { margin-top: 12px; display: inline-block; padding: 10px; background: #00ffaa; color: black; border-radius: 10px; text-decoration: none; }
+    button, .download-btn {
+        width: 100%; padding: 12px; margin-top: 20px;
+        background: linear-gradient(45deg,#ff00cc,#4e00ff);
+        border: none; border-radius: 10px; color: #fff;
+        font-size: 16px; cursor: pointer;
+        text-decoration: none; display:block;
+    }
 
-    .zip-btn { margin-top: 12px; width: 100%; display:block; background: #ffaa00 !important; color: black !important; }
+    .clear-btn { background: #ff4444 !important; }
 
     .info-card {
-        margin-top: 20px; padding: 10px; background: rgba(255,255,255,0.12);
+        margin-top: 20px; padding: 10px;
+        background: rgba(255,255,255,0.12);
         border-radius: 10px;
     }
 
+    body.light-mode .info-card { background: #eee; }
+
+    .credit-text {
+        font-family: 'Brush Script MT', cursive;
+        font-size: 18px;
+        text-align: center;
+        margin-top: 10px;
+    }
 </style></head>
-<body><div class="container">
-    <h2>Ultra Image Reducer (Same Format Only)</h2><input type="file" id="upload" accept="image/*" multiple />
+<body><button class="toggle-btn" onclick="toggleMode()">Toggle Light/Dark</button>
+
+<div class="container">
+    <h2>Ultra Image Reducer – Same Format Only</h2><div id="dropZone">Drag files here</div>
+<input type="file" id="upload" accept="image/*" multiple style="display:none;" />
+
+<button class="clear-btn" onclick="clearAll()">Clear All</button>
 
 <div class="slider-box">
     <div class="label-row">
@@ -88,40 +138,77 @@
         <span id="qualityVal">70%</span>
     </div>
     <input type="range" id="quality" min="10" max="100" value="70" />
-    <div class="note">Higher compression reduces size but also reduces clarity.</div>
+    <div class="note">Higher quality = larger size. Lower quality = smaller size.</div>
 </div>
 
-<button onclick="processAll()">Generate All Reduced Images</button>
+<button onclick="processAll()">Generate Reduced Images</button>
 
 <div class="progress-bar" id="progressBar"><div class="progress-inner"></div></div>
 <div class="status" id="status"></div>
 
 <div id="results"></div>
 
-<a id="zipDownload" class="download-btn zip-btn" style="display:none;" download="all_reduced.zip">Download All as ZIP</a>
+<a id="zipDownload" class="download-btn" style="display:none;" download="all_reduced.zip">Download All as ZIP</a>
 
-</div><script>
+</div><script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script><script>
 let filesList = [];
 let reducedBlobs = [];
 
+const dropZone = document.getElementById("dropZone");
 const upload = document.getElementById("upload");
-const qualitySlider = document.getElementById("quality");
+
+// drag & drop
+
+dropZone.addEventListener("click", () => upload.click());
+
+dropZone.addEventListener("dragover", e => {
+    e.preventDefault();
+    dropZone.style.background = "rgba(255,255,255,0.15)";
+});
+
+dropZone.addEventListener("dragleave", () => {
+    dropZone.style.background = "transparent";
+});
+
+dropZone.addEventListener("drop", e => {
+    e.preventDefault();
+    dropZone.style.background = "transparent";
+    filesList = [...e.dataTransfer.files];
+});
 
 upload.addEventListener("change", e => {
     filesList = [...e.target.files];
 });
 
-qualitySlider.addEventListener("input", () => {
-    document.getElementById("qualityVal").innerText = qualitySlider.value + "%";
-});
+// dark-light mode
+function toggleMode() {
+    document.body.classList.toggle("light-mode");
+}
 
+// clear all
+function clearAll() {
+    document.getElementById("results").innerHTML = "";
+    document.getElementById("status").innerText = "";
+    document.getElementById("zipDownload").style.display = "none";
+    reducedBlobs = [];
+    filesList = [];
+}
+
+// auto resize
 function autoResize(w, h) {
     let maxW = 1080;
     if (w <= maxW) return { w, h };
     let r = maxW / w;
-    return { w: Math.round(w*r), h: Math.round(h*r) };
+    return { w: Math.round(w * r), h: Math.round(h * r) };
 }
 
+// quality slider
+const qualitySlider = document.getElementById("quality");
+qualitySlider.addEventListener("input", () => {
+    document.getElementById("qualityVal").innerText = qualitySlider.value + "%";
+});
+
+// process all
 async function processAll() {
     if (filesList.length === 0) return;
 
@@ -141,22 +228,24 @@ async function processAll() {
     generateZIP();
 }
 
+// process single
 function processSingle(file) {
     return new Promise(resolve => {
         const reader = new FileReader();
 
         reader.onload = ev => {
             let img = new Image();
-
             img.onload = () => {
                 let origSize = file.size;
                 let origW = img.width;
                 let origH = img.height;
+
                 let resized = autoResize(origW, origH);
 
                 let canvas = document.createElement("canvas");
                 canvas.width = resized.w;
                 canvas.height = resized.h;
+
                 let ctx = canvas.getContext("2d");
                 ctx.drawImage(img, 0, 0, resized.w, resized.h);
 
@@ -168,48 +257,15 @@ function processSingle(file) {
                     let percent = ((origSize - blob.size) / origSize) * 100;
 
                     let card = `
-                        <div class='info-card'>
-                            <b>${file.name}</b><br>
-                            Original: ${origW}×${origH}, ${formatBytes(origSize)}<br>
-                            New: ${resized.w}×${resized.h}, ${formatBytes(blob.size)}<br>
-                            Reduced: ${percent.toFixed(2)}%<br><br>
-                            <img src='${URL.createObjectURL(blob)}' style='max-width:100%; border-radius:8px;'><br><br>
-                            <a class='download-btn' download='reduced-${file.name}' href='${URL.createObjectURL(blob)}'>Download</a>
-                        </div>`;
+                    <div class='info-card'>
+                        <b>${file.name}</b><br>
+                        Original: ${origW}×${origH}, ${formatBytes(origSize)}<br>
+                        <img src='${ev.target.result}' style='max-width:100%; border-radius:8px; margin-top:6px;'><br><br>
+                        New: ${resized.w}×${resized.h}, ${formatBytes(blob.size)}<br>
+                        Reduced: ${percent.toFixed(2)}%<br><br>
+                        <img src='${URL.createObjectURL(blob)}' style='max-width:100%; border-radius:8px;'><br><br>
+                        <a class='download-btn' download='reduced-${file.name}' href='${URL.createObjectURL(blob)}'>Download</a>
+                        <div class='credit-text'>Created by Animesh</div>
+                    </div>`;
 
-                    document.getElementById("results").innerHTML += card;
-
-                    resolve();
-                }, file.type, q);
-            };
-
-            img.src = ev.target.result;
-        };
-
-        reader.readAsDataURL(file);
-    });
-}
-
-function generateZIP() {
-    let zipBtn = document.getElementById("zipDownload");
-    zipBtn.style.display = "block";
-
-    let zip = new JSZip();
-
-    reducedBlobs.forEach(obj => {
-        zip.file(obj.name, obj.blob);
-    });
-
-    zip.generateAsync({ type: "blob" }).then(blob => {
-        zipBtn.href = URL.createObjectURL(blob);
-    });
-}
-
-function formatBytes(b) {
-    let sizes = ['B','KB','MB'];
-    let i = 0;
-    while(b > 1024 && i < sizes.length-1){ b/=1024; i++; }
-    return b.toFixed(2) + ' ' + sizes[i];
-}
-</script><script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script></body>
-</html>
+                    document.getElementById("results")
