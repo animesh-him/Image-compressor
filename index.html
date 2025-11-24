@@ -1,315 +1,215 @@
-<!doctype html>
-<html lang="en">
+<!-- FULL FINAL INDEX.HTML WITH ALL FEATURES REQUESTED BY USER --><!DOCTYPE html><html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Ultra Image Compressor — Neon Tech (Created by Animesh)</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Ultra Image Reducer – Same Format Only</title><style>
+    body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        color: #fff;
+        overflow-x: hidden;
+        background: linear-gradient(120deg, #0d0d0d, #1a002b, #0d0d0d);
+        background-size: 400% 400%;
+        animation: bgMove 10s ease infinite;
+    }
 
-<!-- JSZip CDN -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    @keyframes bgMove {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
 
-<style>
-  :root{
-    --bg1:#04060a; --bg2:#071123;
-    --accent1:#00ffe1; --accent2:#ff3dff;
-    --muted:#9aa4b8; --card:#07121a;
-  }
-  html,body{height:100%;margin:0;font-family:Inter,Segoe UI,Roboto,Arial;color:#e6f3ff;background:
-    radial-gradient(800px 400px at 10% 8%, rgba(0,90,80,0.06), transparent),
-    linear-gradient(180deg,var(--bg1),var(--bg2));-webkit-font-smoothing:antialiased;}
-  .wrap{max-width:1100px;margin:28px auto;padding:18px;}
-  header{display:flex;align-items:center;justify-content:space-between;gap:16px}
-  h1{margin:0;font-size:20px;letter-spacing:0.2px}
-  .small{font-size:13px;color:var(--muted)}
-  /* drop zone */
-  .drop {
-    margin-top:18px;border-radius:14px;padding:22px;text-align:center;position:relative;
-    border:1px solid rgba(255,255,255,0.04);
-    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-    box-shadow: 0 10px 30px rgba(0,0,0,0.45);
-    cursor:pointer; overflow:hidden;
-  }
-  .drop:hover{transform:translateY(-4px)}
-  .drop .glow{position:absolute;inset:-3px;border-radius:16px;pointer-events:none;box-shadow:
-    0 0 30px rgba(0,255,220,0.06), 0 0 90px rgba(255,60,255,0.03) inset;}
-  .drop h2{margin:0;font-size:18px}
-  .drop p{margin:8px 0 0;color:var(--muted);font-size:13px}
+    .container {
+        max-width: 600px;
+        margin: auto;
+        margin-top: 20px;
+        background: rgba(255,255,255,0.06);
+        padding: 20px;
+        border-radius: 14px;
+        box-shadow: 0 0 20px rgba(255,255,255,0.15);
+        backdrop-filter: blur(6px);
+    }
 
-  /* controls */
-  .controls{display:flex;gap:12px;align-items:center;margin-top:14px;flex-wrap:wrap}
-  .range{display:flex;gap:10px;align-items:center}
-  input[type="range"]{width:220px}
-  .btn{padding:10px 14px;border-radius:10px;border:0;cursor:pointer;font-weight:700}
-  .btn.neon{background:linear-gradient(90deg,var(--accent1),var(--accent2));color:#041018;box-shadow:0 10px 30px rgba(0,255,220,0.06)}
-  .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted)}
-  .toggle{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.03)}
+    h2 { text-align: center; }
 
-  /* gallery */
-  .grid{display:grid;grid-template-columns:repeat(1,1fr);gap:14px;margin-top:18px}
-  @media(min-width:920px){.grid{grid-template-columns:repeat(2,1fr)}}
-  .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:12px;padding:14px;border:1px solid rgba(255,255,255,0.03);box-shadow:0 12px 40px rgba(0,0,0,0.6)}
-  .row{display:flex;gap:14px;align-items:flex-start}
-  .thumb{width:220px;flex-shrink:0;border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,0.03)}
-  .thumb img{display:block;width:100%;height:auto}
-  .meta{flex:1}
-  .meta .title{font-weight:800;color:#fff;margin-bottom:6px}
-  .meta .info{font-size:13px;color:var(--muted);line-height:1.6}
-  .outputs{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
-  .out{background:rgba(0,0,0,0.28);border-radius:8px;padding:10px;border:1px solid rgba(255,255,255,0.03);display:flex;flex-direction:column}
-  .out .label{font-size:12px;color:var(--muted);font-weight:700}
-  .out .res{font-weight:800;color:#fff}
-  .out .small{font-size:12px;color:var(--muted)}
-  .actions{display:flex;gap:8px;margin-top:8px}
-  .a-btn{padding:8px 10px;border-radius:8px;border:0;background:linear-gradient(90deg,#00ffd0,#9f00ff);color:#041018;font-weight:700;cursor:pointer}
+    #upload { width: 100%; margin-top: 12px; }
 
-  .download-all{text-align:center;margin-top:16px}
-  footer{margin-top:18px;text-align:center;color:var(--muted);font-size:12px}
-  .status.green{color:#6ee7b7;font-weight:700} .status.red{color:#ff9aa2;font-weight:700} .status.orange{color:#ffd08a;font-weight:700}
-</style>
-</head>
-<body>
-  <div class="wrap">
-    <header>
-      <div>
-        <h1>Ultra Image Compressor <span class="small">— Neon Tech UI</span></h1>
-        <div class="small">Created by Animesh</div>
-      </div>
-      <div style="display:flex;gap:12px;align-items:center">
-        <div class="toggle" id="mobileInfo">Reduced width = 1080px</div>
-        <button class="btn ghost" id="helpBtn">Help</button>
-      </div>
-    </header>
+    .slider-box { width: 100%; margin-top: 20px; }
 
-    <div class="drop" id="dropZone">
-      <div class="glow"></div>
-      <h2>Click or Drag & Drop images here</h2>
-      <p class="small">Supports JPG/PNG/HEIC/WEBP — multiple images allowed. Processing is local in your browser.</p>
-      <input id="fileInput" type="file" accept="image/*" multiple style="display:none" />
+    .slider-box input { width: 100%; }
+
+    .label-row { display: flex; justify-content: space-between; }
+
+    #preview, #preview-reduced { max-width: 100%; margin-top: 14px; border-radius: 10px; }
+
+    .status { margin-top: 10px; font-size: 14px; font-weight: bold; }
+
+    .note { font-size: 12px; opacity: 0.8; margin-top: 6px; }
+
+    button {
+        width: 100%; padding: 12px; margin-top: 20px;
+        background: linear-gradient(45deg,#ff00cc,#4e00ff);
+        border: none; border-radius: 10px; color: #fff;
+        font-size: 16px; cursor: pointer;
+    }
+
+    .progress-bar {
+        width: 100%; height: 10px; background: #222;
+        border-radius: 20px; overflow: hidden; margin-top: 10px;
+        display: none;
+    }
+
+    .progress-inner {
+        height: 100%; width: 0%; background: linear-gradient(45deg,#00ff99,#00ccff);
+        animation: loading 2s infinite;
+    }
+
+    @keyframes loading {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+    }
+
+    .download-btn { margin-top: 12px; display: inline-block; padding: 10px; background: #00ffaa; color: black; border-radius: 10px; text-decoration: none; }
+
+    .zip-btn { margin-top: 12px; width: 100%; display:block; background: #ffaa00 !important; color: black !important; }
+
+    .info-card {
+        margin-top: 20px; padding: 10px; background: rgba(255,255,255,0.12);
+        border-radius: 10px;
+    }
+
+</style></head>
+<body><div class="container">
+    <h2>Ultra Image Reducer (Same Format Only)</h2><input type="file" id="upload" accept="image/*" multiple />
+
+<div class="slider-box">
+    <div class="label-row">
+        <span>Quality</span>
+        <span id="qualityVal">70%</span>
     </div>
+    <input type="range" id="quality" min="10" max="100" value="70" />
+    <div class="note">Higher compression reduces size but also reduces clarity.</div>
+</div>
 
-    <div class="controls">
-      <div class="range">
-        <label class="small" style="min-width:70px">Quality</label>
-        <input id="quality" type="range" min="30" max="95" value="78">
-        <div id="qLabel" class="small">78%</div>
-      </div>
-      <button class="btn neon" id="clearAll">Clear All</button>
-      <button class="btn ghost" id="downloadZipBtn">Download All as ZIP</button>
-    </div>
+<button onclick="processAll()">Generate All Reduced Images</button>
 
-    <div class="grid" id="gallery"></div>
+<div class="progress-bar" id="progressBar"><div class="progress-inner"></div></div>
+<div class="status" id="status"></div>
 
-    <div class="download-all">
-      <div class="small">All outputs can be downloaded individually or via ZIP.</div>
-    </div>
+<div id="results"></div>
 
-    <footer>Created by Animesh — Ultra Image Compressor</footer>
-  </div>
+<a id="zipDownload" class="download-btn zip-btn" style="display:none;" download="all_reduced.zip">Download All as ZIP</a>
 
-<script>
-/* Final version: two outputs only (same-format reduced res; webp reduced res)
-   Reduced width rule: max width = 1080 (Option 1)
-   If same-format compressed becomes larger, iteratively reduce quality (down to minQuality)
-   If still larger, return original (No reduction possible)
-*/
+</div><script>
+let filesList = [];
+let reducedBlobs = [];
 
-const dropZone = document.getElementById('dropZone');
-const fileInput = document.getElementById('fileInput');
-const gallery = document.getElementById('gallery');
-const quality = document.getElementById('quality');
-const qLabel = document.getElementById('qLabel');
-const clearAll = document.getElementById('clearAll');
-const downloadZipBtn = document.getElementById('downloadZipBtn');
+const upload = document.getElementById("upload");
+const qualitySlider = document.getElementById("quality");
 
-const MAX_WIDTH = 1080; // reduced resolution max width
-const MIN_QUALITY = 0.35; // minimum quality when iterating for same-format fallback
-
-let zipItems = [];
-
-qLabel.textContent = quality.value + '%';
-quality.oninput = () => qLabel.textContent = quality.value + '%';
-
-dropZone.addEventListener('click', ()=> fileInput.click());
-dropZone.addEventListener('dragover', (e)=>{ e.preventDefault(); dropZone.style.transform='translateY(-6px)'; });
-dropZone.addEventListener('dragleave', ()=> dropZone.style.transform='none');
-dropZone.addEventListener('drop', (e)=>{ e.preventDefault(); dropZone.style.transform='none'; handleFiles(e.dataTransfer.files); });
-fileInput.addEventListener('change', ()=> handleFiles(fileInput.files));
-
-clearAll.addEventListener('click', ()=> { gallery.innerHTML=''; zipItems=[]; alert('Cleared all processed images.'); });
-
-downloadZipBtn.addEventListener('click', async () => {
-  if (!zipItems.length) { alert('No outputs to zip. Compress images first.'); return; }
-  downloadZipBtn.disabled = true; downloadZipBtn.textContent = 'Preparing ZIP...';
-  const zip = new JSZip();
-  for (const it of zipItems) zip.file(it.name, it.blob);
-  try {
-    const content = await zip.generateAsync({type:'blob'});
-    const url = URL.createObjectURL(content);
-    triggerDownload(url, 'compressed_images.zip');
-  } catch (e) {
-    console.error('ZIP error', e); alert('ZIP creation failed.');
-  }
-  downloadZipBtn.disabled = false; downloadZipBtn.textContent = 'Download All as ZIP';
+upload.addEventListener("change", e => {
+    filesList = [...e.target.files];
 });
 
-// helpers
-function triggerDownload(url,name){ const a=document.createElement('a'); a.href=url; a.download=name; document.body.appendChild(a); a.click(); a.remove(); }
-function bytesToKB(b){ return (b/1024).toFixed(1); }
-function bytesToMB(b){ return (b/1024/1024).toFixed(3); }
-function percentReduce(orig, now){ return ((orig - now)/orig*100).toFixed(2); }
-function formatExt(mime){ return mime.split('/')[1].split('+')[0]; }
-function readFileAsDataURL(file){ return new Promise((res,rej)=>{ const fr=new FileReader(); fr.onload=()=>res(fr.result); fr.onerror=rej; fr.readAsDataURL(file); }); }
-function createImage(dataURL){ return new Promise((res,rej)=>{ const img=new Image(); img.onload=()=>res(img); img.onerror=rej; img.src=dataURL; }); }
+qualitySlider.addEventListener("input", () => {
+    document.getElementById("qualityVal").innerText = qualitySlider.value + "%";
+});
 
-// compute reduced dims (preserve aspect ratio, max width MAX_WIDTH)
-function computeReducedDims(w,h){
-  if (w <= MAX_WIDTH) return {w,h};
-  const ratio = h / w;
-  const newW = MAX_WIDTH;
-  const newH = Math.round(newW * ratio);
-  return {w:newW,h:newH};
+function autoResize(w, h) {
+    let maxW = 1080;
+    if (w <= maxW) return { w, h };
+    let r = maxW / w;
+    return { w: Math.round(w*r), h: Math.round(h*r) };
 }
 
-// draw image into canvas of given dims and return blob for mime & quality
-async function canvasToBlob(img, mime, width, height, q){
-  const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext('2d');
-  ctx.imageSmoothingQuality = 'high';
-  ctx.drawImage(img, 0, 0, width, height);
-  const dataURL = canvas.toDataURL(mime, q);
-  const blob = await (await fetch(dataURL)).blob();
-  return {blob, dataURL};
-}
+async function processAll() {
+    if (filesList.length === 0) return;
 
-// main handler
-async function handleFiles(list){
-  const files = Array.from(list);
-  for (const file of files){
-    if (!file.type.startsWith('image/')) continue;
-    await processFile(file);
-  }
-}
+    reducedBlobs = [];
+    document.getElementById("results").innerHTML = "";
 
-async function processFile(file){
-  try {
-    const origDataURL = await readFileAsDataURL(file);
-    const img = await createImage(origDataURL);
-    const origW = img.width, origH = img.height;
-    const origSize = file.size;
+    document.getElementById("status").innerText = "Generating…";
+    document.getElementById("progressBar").style.display = "block";
 
-    // compute reduced dims
-    const reduced = computeReducedDims(origW, origH);
-
-    // make card UI
-    const card = document.createElement('div'); card.className = 'card';
-    card.innerHTML = `
-      <div class="row">
-        <div class="thumb"><img src="${origDataURL}" alt="thumb"></div>
-        <div class="meta">
-          <div class="title">${escapeHtml(file.name)}</div>
-          <div class="info">Original: <b>${origW} × ${origH}</b> • ${bytesToKB(origSize)} KB (${bytesToMB(origSize)} MB) • ${file.type}</div>
-          <div class="note" style="margin-top:10px">Generating two reduced outputs (same-format & WebP) at reduced width ≤ ${MAX_WIDTH}px. Quality: <b>${quality.value}%</b></div>
-          <div class="outputs"></div>
-        </div>
-      </div>
-    `;
-    gallery.prepend(card);
-    const outputsContainer = card.querySelector('.outputs');
-
-    // define outputs to create (only reduced resolution versions)
-    const outputs = [
-      {id:'same_reduced', label:'Best Reduced — Same Format (Reduced Res)', mime:file.type, w:reduced.w, h:reduced.h},
-      {id:'webp_reduced', label:'Best Reduced — WebP (Reduced Res)', mime:'image/webp', w:reduced.w, h:reduced.h},
-    ];
-
-    for (const o of outputs){
-      const outEl = document.createElement('div'); outEl.className = 'out';
-      outEl.innerHTML = `
-        <div class="label">${o.label}</div>
-        <div class="res">Res: <span class="resVal">-</span></div>
-        <div class="small">Format: <span class="fmt">-</span> • Size: <span class="sizeVal">-</span></div>
-        <div class="small">Reduction: <span class="pct">-</span></div>
-        <div class="actions"><button class="a-btn download">Download</button></div>
-      `;
-      outputsContainer.appendChild(outEl);
-      o.dom = outEl;
+    for (let i = 0; i < filesList.length; i++) {
+        await processSingle(filesList[i]);
     }
 
-    // generate SAME-FORMAT reduced output with safety (prevent increase)
-    // Strategy: try at chosen quality; if larger than original file, iteratively lower quality until smaller or min quality reached
-    const chosenQuality = Number(quality.value)/100;
-    let sameResult = null;
+    document.getElementById("status").innerText = "Generated";
+    document.getElementById("progressBar").style.display = "none";
 
-    // if original mime is PNG, we'll use chosenQuality but browsers may ignore quality for PNG; we still attempt
-    // Attempt loop
-    let q = chosenQuality;
-    let attempt = 0;
-    while (attempt < 7) {
-      const res = await canvasToBlob(img, file.type, outputs[0].w, outputs[0].h, q);
-      const size = res.blob.size;
-      // If compressed size <= original size OR q is already at MIN_QUALITY, accept.
-      if (size <= origSize || q <= MIN_QUALITY) {
-        sameResult = {blob: res.blob, dataURL: res.dataURL, size};
-        break;
-      }
-      // else reduce quality and retry
-      q = q - 0.12; // reduce quality step
-      if (q < MIN_QUALITY) q = MIN_QUALITY;
-      attempt++;
-    }
-
-    // If still larger than original after attempts: do final check; if still larger, use original file (no reduction possible)
-    if (!sameResult) {
-      sameResult = {blob: file, dataURL: origDataURL, size: origSize, note:'no-reduction'};
-    } else {
-      // if resulting size > original, fallback to original
-      if (sameResult.size > origSize) {
-        sameResult = {blob: file, dataURL: origDataURL, size: origSize, note:'no-reduction'};
-      }
-    }
-
-    // fill same-format DOM
-    const sameDom = outputs[0].dom;
-    sameDom.querySelector('.resVal').textContent = `${outputs[0].w}×${outputs[0].h}`;
-    sameDom.querySelector('.fmt').textContent = (sameResult.blob.type || file.type);
-    sameDom.querySelector('.sizeVal').textContent = `${bytesToKB(sameResult.size)} KB (${bytesToMB(sameResult.size)} MB)`;
-    let samePct = (sameResult.size === origSize) ? 0 : percentReduce(origSize, sameResult.size);
-    sameDom.querySelector('.pct').textContent = (sameResult.note === 'no-reduction') ? 'No reduction possible' : `${samePct}%`;
-    const sameDownloadBtn = sameDom.querySelector('.download');
-    const sameExt = formatExt(sameResult.blob.type || file.type);
-    const baseName = (file.name||'image').replace(/\.[^/.]+$/, '');
-    const sameName = `${baseName}_same_reduced.${sameExt}`;
-    const sameURL = URL.createObjectURL(sameResult.blob);
-    sameDownloadBtn.addEventListener('click', ()=> triggerDownload(sameURL, sameName));
-    zipItems.push({name:sameName, blob:sameResult.blob});
-
-    // generate WEBP reduced (single attempt using chosenQuality)
-    const webpRes = await canvasToBlob(img, 'image/webp', outputs[1].w, outputs[1].h, chosenQuality);
-    const webpSize = webpRes.blob.size;
-    const webpDom = outputs[1].dom;
-    webpDom.querySelector('.resVal').textContent = `${outputs[1].w}×${outputs[1].h}`;
-    webpDom.querySelector('.fmt').textContent = 'image/webp';
-    webpDom.querySelector('.sizeVal').textContent = `${bytesToKB(webpSize)} KB (${bytesToMB(webpSize)} MB)`;
-    const webpPct = percentReduce(origSize, webpSize);
-    webpDom.querySelector('.pct').textContent = `${webpPct}%`;
-    const webpExt = 'webp';
-    const webpName = `${baseName}_webp_reduced.${webpExt}`;
-    const webpURL = URL.createObjectURL(webpRes.blob);
-    const webpDownloadBtn = webpDom.querySelector('.download');
-    webpDownloadBtn.addEventListener('click', ()=> triggerDownload(webpURL, webpName));
-    zipItems.push({name:webpName, blob:webpRes.blob});
-
-  } catch (err) {
-    console.error('processFile error', err);
-    alert('Failed to process file: ' + (file && file.name ? file.name : 'unknown'));
-  }
+    generateZIP();
 }
 
-// escape helper
-function escapeHtml(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function processSingle(file) {
+    return new Promise(resolve => {
+        const reader = new FileReader();
 
-</script>
-</body>
+        reader.onload = ev => {
+            let img = new Image();
+
+            img.onload = () => {
+                let origSize = file.size;
+                let origW = img.width;
+                let origH = img.height;
+                let resized = autoResize(origW, origH);
+
+                let canvas = document.createElement("canvas");
+                canvas.width = resized.w;
+                canvas.height = resized.h;
+                let ctx = canvas.getContext("2d");
+                ctx.drawImage(img, 0, 0, resized.w, resized.h);
+
+                const q = qualitySlider.value / 100;
+
+                canvas.toBlob(blob => {
+                    reducedBlobs.push({ name: file.name, blob });
+
+                    let percent = ((origSize - blob.size) / origSize) * 100;
+
+                    let card = `
+                        <div class='info-card'>
+                            <b>${file.name}</b><br>
+                            Original: ${origW}×${origH}, ${formatBytes(origSize)}<br>
+                            New: ${resized.w}×${resized.h}, ${formatBytes(blob.size)}<br>
+                            Reduced: ${percent.toFixed(2)}%<br><br>
+                            <img src='${URL.createObjectURL(blob)}' style='max-width:100%; border-radius:8px;'><br><br>
+                            <a class='download-btn' download='reduced-${file.name}' href='${URL.createObjectURL(blob)}'>Download</a>
+                        </div>`;
+
+                    document.getElementById("results").innerHTML += card;
+
+                    resolve();
+                }, file.type, q);
+            };
+
+            img.src = ev.target.result;
+        };
+
+        reader.readAsDataURL(file);
+    });
+}
+
+function generateZIP() {
+    let zipBtn = document.getElementById("zipDownload");
+    zipBtn.style.display = "block";
+
+    let zip = new JSZip();
+
+    reducedBlobs.forEach(obj => {
+        zip.file(obj.name, obj.blob);
+    });
+
+    zip.generateAsync({ type: "blob" }).then(blob => {
+        zipBtn.href = URL.createObjectURL(blob);
+    });
+}
+
+function formatBytes(b) {
+    let sizes = ['B','KB','MB'];
+    let i = 0;
+    while(b > 1024 && i < sizes.length-1){ b/=1024; i++; }
+    return b.toFixed(2) + ' ' + sizes[i];
+}
+</script><script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script></body>
 </html>
