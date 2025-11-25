@@ -1,315 +1,304 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Image Reducer</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Auto Image Reducer</title>
 
 <style>
-/* ---------------- GLOBAL STYLE ---------------- */
-body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background: #000;
-    color: #fff;
-    overflow-x: hidden;
-}
+    body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: #060606;
+        color: #fff;
+        transition: background 0.3s, color 0.3s;
+    }
 
-/* Animated Neon Background */
-body::before {
-    content: "";
-    position: fixed;
-    inset: 0;
-    background: radial-gradient(circle at center,
-                rgba(255,0,120,0.3),
-                rgba(0,0,0,1));
-    animation: pulse 6s infinite alternate;
-    z-index: -1;
-}
+    /* Light mode */
+    body.light {
+        background: #fafafa;
+        color: #111;
+    }
 
-@keyframes pulse {
-    0% { filter: blur(40px) brightness(1); }
-    100% { filter: blur(80px) brightness(1.4); }
-}
+    .container {
+        max-width: 900px;
+        margin: auto;
+        padding: 20px;
+        text-align: center;
+    }
 
-/* Title */
-h1 {
-    text-align: center;
-    font-family: "Brush Script MT", cursive;
-    font-size: 40px;
-    margin-top: 20px;
-    color: #fff;
-}
+    /* Neon animated border */
+    .neon-box {
+        border: 2px solid rgba(255, 0, 200, 0.6);
+        padding: 20px;
+        border-radius: 20px;
+        box-shadow: 0 0 25px rgba(255, 0, 200, 0.6), inset 0 0 20px rgba(0, 240, 255, 0.3);
+        animation: glow 2s infinite alternate;
+    }
 
-/* Dark Mode Toggle */
-.toggle-container {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    transform: scale(0.8);
-}
-.toggle-container input { display: none; }
-.toggle-container label {
-    width: 60px;
-    height: 30px;
-    background: #444;
-    border-radius: 30px;
-    display: block;
-    position: relative;
-    cursor: pointer;
-}
-.toggle-container label::after {
-    content: "";
-    width: 26px;
-    height: 26px;
-    background: #fff;
-    border-radius: 50%;
-    position: absolute;
-    top: 2px;
-    left: 2px;
-    transition: 0.3s;
-}
-.toggle-container input:checked + label {
-    background: #ddd;
-}
-.toggle-container input:checked + label::after {
-    left: 32px;
-    background: #000;
-}
+    @keyframes glow {
+        from { box-shadow: 0 0 10px #ff00c8, inset 0 0 5px #00f0ff; }
+        to   { box-shadow: 0 0 25px #ff00c8, inset 0 0 20px #00f0ff; }
+    }
 
-/* Drag Box */
-#dropBox {
-    width: 70%;
-    max-width: 260px;
-    height: 80px;
-    border: 2px dashed #0ff;
-    margin: 25px auto;
-    border-radius: 10px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    color: #0ff;
-    font-size: 14px;
-    cursor: pointer;
-}
+    /* Drag-and-drop zone (small mobile-friendly) */
+    #drop-area {
+        width: 180px;
+        height: 90px;
+        margin: 20px auto;
+        border: 2px dashed #ff00c8;
+        border-radius: 12px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 13px;
+        cursor: pointer;
+        background: rgba(255, 255, 255, 0.04);
+    }
 
-/* Container */
-.section {
-    width: 90%;
-    margin: 20px auto;
-    background: rgba(255,255,255,0.05);
-    padding: 15px;
-    border-radius: 10px;
-}
+    #drop-area:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
 
-/* Image previews */
-img {
-    width: 100%;
-    max-width: 270px;
-    border-radius: 6px;
-    margin-top: 10px;
-}
+    .hidden-input {
+        display: none;
+    }
 
-/* Download buttons */
-.btn {
-    padding: 10px 15px;
-    background: #0ff;
-    color: #000;
-    border-radius: 6px;
-    border: none;
-    margin-right: 10px;
-    cursor: pointer;
-    font-weight: bold;
-}
-.btn:hover {
-    opacity: 0.7;
-}
+    .result-section {
+        margin-top: 30px;
+        padding: 20px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.05);
+    }
 
-.credit {
-    text-align: center;
-    font-family: "Brush Script MT", cursive;
-    margin-top: 30px;
-    font-size: 28px;
-    color: #0ff;
-    animation: flicker 2s infinite;
-}
+    .preview-img {
+        max-width: 180px;
+        border-radius: 10px;
+        margin-top: 10px;
+    }
 
-@keyframes flicker {
-    0%,100% { opacity: 1; }
-    50% { opacity: 0.5; }
-}
+    button {
+        margin: 6px;
+        padding: 10px 16px;
+        border: none;
+        border-radius: 8px;
+        background: #ff00c8;
+        color: #fff;
+        cursor: pointer;
+        font-size: 14px;
+        transition: 0.2s;
+    }
+
+    button:hover {
+        background: #ff44dd;
+    }
+
+    .credit {
+        margin-top: 40px;
+        font-family: "Brush Script MT", cursive;
+        font-size: 26px;
+        animation: glowText 4s infinite alternate;
+    }
+
+    @keyframes glowText {
+        from { text-shadow: 0 0 8px #ff00c8; }
+        to   { text-shadow: 0 0 18px #00eaff; }
+    }
+
+    .toggle {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+    }
 
 </style>
 </head>
 
 <body>
-
-<h1>Image Reducer</h1>
-
-<!-- Dark Mode Toggle -->
-<div class="toggle-container">
-    <input type="checkbox" id="modeSwitch" />
-    <label for="modeSwitch"></label>
+<div class="toggle">
+    <button onclick="toggleMode()">Toggle Light/Dark</button>
 </div>
 
-<!-- Drag Box -->
-<div id="dropBox">Drag files here</div>
-<input type="file" id="fileInput" multiple style="display:none">
+<div class="container">
+    <h1>Auto Image Size Reducer</h1>
 
-<div id="output"></div>
+    <div id="drop-area" onclick="fileInput.click()">
+        Tap or Drop Image Here
+    </div>
+    <input id="file-input" type="file" accept="image/*" class="hidden-input" />
 
-<div class="credit">Created by Animesh</div>
+    <button onclick="clearAll()">Clear All</button>
+
+    <div id="results"></div>
+
+    <div class="credit">Created by Animesh</div>
+</div>
 
 <script>
-/* ========== DARK MODE ========== */
-document.getElementById("modeSwitch").addEventListener("change", e => {
-    document.body.style.background = e.target.checked ? "#fff" : "#000";
-    document.body.style.color = e.target.checked ? "#000" : "#fff";
-});
+const fileInput = document.getElementById("file-input");
+const dropArea = document.getElementById("drop-area");
+const results = document.getElementById("results");
 
-/* ========== FILE HANDLING ========== */
-let dropBox = document.getElementById("dropBox");
-let fileInput = document.getElementById("fileInput");
-
-dropBox.onclick = () => fileInput.click();
-dropBox.addEventListener("dragover", e => { e.preventDefault(); dropBox.style.borderColor="#fff"; });
-dropBox.addEventListener("dragleave", ()=> dropBox.style.borderColor="#0ff");
-dropBox.addEventListener("drop", e => {
+dropArea.addEventListener("dragover", e => { e.preventDefault(); });
+dropArea.addEventListener("drop", e => {
     e.preventDefault();
-    handleFiles(e.dataTransfer.files);
+    processFile(e.dataTransfer.files[0]);
 });
 
-fileInput.addEventListener("change", () => handleFiles(fileInput.files));
+fileInput.addEventListener("change", () => {
+    processFile(fileInput.files[0]);
+});
 
-/* ========= MAIN PROCESSING ========= */
-function handleFiles(files){
-    [...files].forEach(file => processImage(file));
+/* Toggle Light/Dark Mode */
+function toggleMode() {
+    document.body.classList.toggle("light");
 }
 
-function processImage(file){
-    let reader = new FileReader();
-    reader.readAsDataURL(file);
-
-    reader.onload = () => {
-        let img = new Image();
-        img.src = reader.result;
-
-        img.onload = () => {
-            let width = img.width;
-            let height = img.height;
-            let originalSize = file.size;
-
-            let fileBase = file.name.split(".").slice(0,-1).join(".").toLowerCase();
-            let fileExt = file.name.split(".").pop().toLowerCase();
-
-            let container = document.createElement("div");
-            container.className = "section";
-
-            container.innerHTML = `
-                <h2>Original Image</h2>
-                <img src="${img.src}">
-                <p><b>Format:</b> ${fileExt}</p>
-                <p><b>Resolution:</b> ${width} × ${height}</p>
-                <p><b>Size:</b> ${formatBytes(originalSize)}</p>
-
-                <h2>Reduced Versions</h2>
-
-                <button class="btn" onclick="downloadStage('${fileBase}','stage1')">Download all (Stage 1)</button>
-                <button class="btn" onclick="downloadStage('${fileBase}','stage2')">Download all (Stage 2)</button>
-                <button class="btn" onclick="downloadStage('${fileBase}','stage3')">Download all (Stage 3)</button>
-
-                <div id="${fileBase}_results"></div>
-            `;
-            document.getElementById("output").appendChild(container);
-
-            /* ===== AUTO GENERATE STAGES ===== */
-            generateStages(img, fileBase, fileExt, originalSize);
-        }
-    }
+/* Clear All */
+function clearAll() {
+    results.innerHTML = "";
+    fileInput.value = "";
 }
 
-/* ========== STAGE GENERATION ========== */
-let stageFiles = {};
-
-function generateStages(img, base, ext, originalSize){
-    stageFiles[base] = {};
-
-    /* Stage 1 → Q70 same resolution */
-    stageFiles[base]["stage1"] = reduce(img, ext, 0.70, 1.0);
-
-    /* Stage 2 → Q50 same resolution */
-    stageFiles[base]["stage2"] = reduce(img, ext, 0.50, 1.0);
-
-    /* Stage 3 → Progressive scaling 80%, 60%, 40% until smaller */
-    let s = 0.80;
-    let result;
-    do {
-        result = reduce(img, ext, 0.60, s);
-        s -= 0.20;
-    } while(result.size >= originalSize && s > 0.4);
-
-    stageFiles[base]["stage3"] = result;
-
-    displayResults(base);
-}
-
-/* ========== REDUCTION FUNCTION ========== */
-function reduce(img, ext, quality, scale){
-    let canvas = document.createElement("canvas");
-    canvas.width = img.width * scale;
-    canvas.height = img.height * scale;
-
-    let ctx = canvas.getContext("2d");
-    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-    let dataURL = canvas.toDataURL("image/" + ext, quality);
-
-    let bin = atob(dataURL.split(',')[1]);
-    let arr = new Uint8Array(bin.length);
-    for(let i=0;i<bin.length;i++) arr[i] = bin.charCodeAt(i);
-
-    return {
-        blob: new Blob([arr], {type: "image/"+ext}),
-        size: arr.length,
-        width: canvas.width,
-        height: canvas.height,
-        url: dataURL
-    };
-}
-
-/* ========== DISPLAY RESULTS ========== */
-function displayResults(base){
-    let box = document.getElementById(base + "_results");
-    box.innerHTML = "";
-
-    ["stage1","stage2","stage3"].forEach(stage => {
-        let f = stageFiles[base][stage];
-        box.innerHTML += `
-            <h3>${stage.replace("stage","Stage ")}</h3>
-            <img src="${f.url}">
-            <p><b>Resolution:</b> ${f.width} × ${f.height}</p>
-            <p><b>Size:</b> ${formatBytes(f.size)}</p>
-        `;
-    });
-}
-
-/* ========== DOWNLOAD HANDLER ========== */
-function downloadStage(base, stage){
-    let f = stageFiles[base][stage];
-    let a = document.createElement("a");
-    a.href = f.url;
-    a.download = `${base}_${stage}.jpg`;
-    a.click();
-}
-
-/* ========== BYTES FORMATTER ========== */
-function formatBytes(bytes){
-    let kb = (bytes/1024).toFixed(2);
-    let mb = (bytes/1024/1024).toFixed(2);
+/* Format size in KB + MB */
+function formatSize(bytes) {
+    const kb = (bytes / 1024).toFixed(2);
+    const mb = (bytes / (1024 * 1024)).toFixed(2);
     return `${kb} KB (${mb} MB)`;
 }
 
+/* Compress Utility */
+async function compressImage(file, quality = 0.7, scale = 1) {
+    return new Promise(resolve => {
+        const img = new Image();
+        img.onload = () => {
+            const canvas = document.createElement("canvas");
+            canvas.width = img.width * scale;
+            canvas.height = img.height * scale;
+
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+            canvas.toBlob(
+                blob => {
+                    resolve({
+                        blob,
+                        url: URL.createObjectURL(blob),
+                        size: blob.size,
+                        width: canvas.width,
+                        height: canvas.height
+                    });
+                },
+                "image/jpeg",
+                quality
+            );
+        };
+        img.src = URL.createObjectURL(file);
+    });
+}
+
+/* Stage 3 auto-fallback scale reducing */
+async function stage3Auto(originalFile) {
+    let scales = [0.6, 0.5, 0.4, 0.3];
+    for (let s of scales) {
+        let out = await compressImage(originalFile, 0.6, s);
+        if (out.size < originalFile.size) return out;
+    }
+    return null;
+}
+
+/* MAIN PROCESSOR */
+async function processFile(file) {
+    if (!file) return;
+
+    results.innerHTML = "<h3>Processing…</h3>";
+
+    const originalSize = file.size;
+
+    // Stage 1: Q70
+    let stage1 = await compressImage(file, 0.7, 1);
+
+    // Stage 2: Q30
+    let stage2 = await compressImage(file, 0.3, 1);
+
+    // Stage 3: auto scale + Q60
+    let stage3 = await stage3Auto(file);
+
+    results.innerHTML = ""; // clear processing message
+
+    addStageOutput(file, "stage1", stage1);
+    addStageOutput(file, "stage2", stage2);
+    if (stage3) addStageOutput(file, "stage3", stage3);
+}
+
+/* Display + ZIP + Email */
+function addStageOutput(originalFile, stageName, output) {
+    if (output.size >= originalFile.size) return;
+
+    const section = document.createElement("div");
+    section.className = "result-section";
+
+    const newName = originalFile.name.replace(/\.[^.]+$/, "") + `_${stageName}.jpg`;
+
+    const blobFile = new File([output.blob], newName, { type: "image/jpeg" });
+
+    section.innerHTML = `
+        <h3>${stageName.toUpperCase()}</h3>
+        <img class="preview-img" src="${output.url}" />
+
+        <p><b>Resolution:</b> ${output.width} × ${output.height}</p>
+        <p><b>Output Size:</b> ${formatSize(output.size)}</p>
+        <p><b>Reduction:</b> 
+            ${((1 - output.size / originalFile.size) * 100).toFixed(1)}%
+        </p>
+
+        <button onclick="downloadFile('${newName}', '${output.url}')">Download</button>
+        <button onclick="downloadZipStage('${stageName}')">Download ZIP (Stage Only)</button>
+        <button onclick="emailFile('${newName}', '${output.url}')">Email File</button>
+    `;
+
+    results.appendChild(section);
+
+    // Save files per-stage
+    if (!window.stageFiles) window.stageFiles = {};
+    if (!window.stageFiles[stageName]) window.stageFiles[stageName] = [];
+    window.stageFiles[stageName].push(blobFile);
+}
+
+/* Download single */
+function downloadFile(name, url) {
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = name;
+    a.click();
+}
+
+/* Download ZIP for stage */
+async function downloadZipStage(stageName) {
+    const files = window.stageFiles?.[stageName];
+    if (!files || files.length === 0) return alert("No files.");
+
+    const zip = new JSZip();
+    files.forEach(f => zip.file(f.name, f));
+
+    const blob = await zip.generateAsync({ type: "blob" });
+
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `${stageName}.zip`;
+    a.click();
+}
+
+/* Email button */
+function emailFile(name, url) {
+    const mail = `mailto:?subject=Reduced Image&body=Your reduced file (${name}) is here: ${url}`;
+    window.location.href = mail;
+}
+
 </script>
+
+<!-- JSZip CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
 
 </body>
 </html>
