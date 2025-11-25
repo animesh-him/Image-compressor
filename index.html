@@ -1,412 +1,304 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Ultra Image Compressor — Created by Animesh</title>
-
-<!-- JSZip for ZIP downloads -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Auto Image Reducer</title>
 
 <style>
-  :root{
-    --bg-a:#0b0710; --bg-b:#2a003d;
-    --accent1:#ff3cac; --accent2:#00ffd1; --muted:#9aa4b8;
-    --card: rgba(255,255,255,0.03);
-  }
-  html,body{height:100%;margin:0;font-family:Inter,system-ui,Arial,sans-serif;background:
-    radial-gradient(800px 400px at 10% 10%, rgba(255,60,120,0.04), transparent),
-    linear-gradient(180deg,var(--bg-a),var(--bg-b));color:#e8f6ff;-webkit-font-smoothing:antialiased;}
-  .wrap{max-width:980px;margin:20px auto;padding:18px;}
-  header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
-  h1{margin:0;font-size:22px}
-  .small{font-size:13px;color:var(--muted)}
-  /* animated background accents */
-  .bg-spot{position:fixed;z-index:-1;pointer-events:none;mix-blend-mode:screen;opacity:0.22}
-  .bg-spot.one{left:-10%;top:5%;width:520px;height:520px;background:radial-gradient(circle,#ff66bb,#ff66bb00);}
-  .bg-spot.two{right:-8%;bottom:0;width:420px;height:420px;background:radial-gradient(circle,#00ffd1,#00ffd100);opacity:0.18}
+    body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: #060606;
+        color: #fff;
+        transition: background 0.3s, color 0.3s;
+    }
 
-  /* drop box (mobile friendly small) */
-  .drop-box{
-    width:160px;height:80px;margin:18px auto;border-radius:14px;
-    display:flex;align-items:center;justify-content:center;text-align:center;
-    border:2px dashed rgba(255,255,255,0.08); background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.02));
-    box-shadow:0 8px 30px rgba(0,0,0,0.6);
-    cursor:pointer; position:relative; overflow:hidden;
-  }
-  .drop-box:hover{transform:translateY(-4px)}
-  .controls{display:flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:center;margin-top:8px}
-  .btn{padding:10px 14px;border-radius:10px;border:0;cursor:pointer;font-weight:700}
-  .btn.primary{background:linear-gradient(90deg,var(--accent1),#ff8a65); color:#081218}
-  .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted)}
-  .btn.warn{background:#ff6b6b;color:#081218}
+    /* Light mode */
+    body.light {
+        background: #fafafa;
+        color: #111;
+    }
 
-  /* grid */
-  .grid{display:grid;grid-template-columns:1fr;gap:14px;margin-top:18px}
-  @media(min-width:880px){ .grid{grid-template-columns:repeat(2,1fr)} }
-  .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:12px;padding:12px;border:1px solid rgba(255,255,255,0.03);box-shadow:0 12px 40px rgba(0,0,0,0.6)}
-  .row{display:flex;gap:12px;align-items:flex-start}
-  .thumb{width:140px;flex-shrink:0;border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,0.03)}
-  .thumb img{display:block;width:100%;height:auto}
-  .meta{flex:1}
-  .meta .title{font-weight:800;color:#fff;margin-bottom:6px}
-  .meta .info{font-size:13px;color:var(--muted);line-height:1.6}
-  .status{font-size:13px;color:var(--muted);margin-top:8px}
+    .container {
+        max-width: 900px;
+        margin: auto;
+        padding: 20px;
+        text-align: center;
+    }
 
-  .outputs{margin-top:10px;display:grid;gap:8px}
-  .out{background:rgba(0,0,0,0.32);padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.02)}
-  .out .label{font-weight:700;color:#fff}
-  .out .small{font-size:13px;color:var(--muted)}
-  .preview{width:100%;border-radius:8px;display:block;margin-top:8px}
+    /* Neon animated border */
+    .neon-box {
+        border: 2px solid rgba(255, 0, 200, 0.6);
+        padding: 20px;
+        border-radius: 20px;
+        box-shadow: 0 0 25px rgba(255, 0, 200, 0.6), inset 0 0 20px rgba(0, 240, 255, 0.3);
+        animation: glow 2s infinite alternate;
+    }
 
-  footer{margin-top:22px;text-align:center;color:var(--muted);font-size:12px}
+    @keyframes glow {
+        from { box-shadow: 0 0 10px #ff00c8, inset 0 0 5px #00f0ff; }
+        to   { box-shadow: 0 0 25px #ff00c8, inset 0 0 20px #00f0ff; }
+    }
 
-  /* cursive horizontal credit with sweeping light */
-  .credit{
-    font-family:"Brush Script MT",cursive;
-    font-size:18px;color:#fff;padding:6px 12px;border-radius:999px;background:rgba(255,255,255,0.02);position:relative;overflow:hidden;
-  }
-  .credit .sweep{position:absolute;left:-35%;top:0;width:35%;height:100%;background:linear-gradient(90deg,rgba(255,255,255,0.06),rgba(255,255,255,0.18),rgba(255,255,255,0.06));transform:skewX(-18deg);animation:sweep 3s linear infinite}
-  @keyframes sweep{0%{left:-35%}50%{left:120%}100%{left:-35%}}
+    /* Drag-and-drop zone (small mobile-friendly) */
+    #drop-area {
+        width: 180px;
+        height: 90px;
+        margin: 20px auto;
+        border: 2px dashed #ff00c8;
+        border-radius: 12px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 13px;
+        cursor: pointer;
+        background: rgba(255, 255, 255, 0.04);
+    }
+
+    #drop-area:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    .hidden-input {
+        display: none;
+    }
+
+    .result-section {
+        margin-top: 30px;
+        padding: 20px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    .preview-img {
+        max-width: 180px;
+        border-radius: 10px;
+        margin-top: 10px;
+    }
+
+    button {
+        margin: 6px;
+        padding: 10px 16px;
+        border: none;
+        border-radius: 8px;
+        background: #ff00c8;
+        color: #fff;
+        cursor: pointer;
+        font-size: 14px;
+        transition: 0.2s;
+    }
+
+    button:hover {
+        background: #ff44dd;
+    }
+
+    .credit {
+        margin-top: 40px;
+        font-family: "Brush Script MT", cursive;
+        font-size: 26px;
+        animation: glowText 4s infinite alternate;
+    }
+
+    @keyframes glowText {
+        from { text-shadow: 0 0 8px #ff00c8; }
+        to   { text-shadow: 0 0 18px #00eaff; }
+    }
+
+    .toggle {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+    }
+
 </style>
 </head>
+
 <body>
-  <div class="bg-spot one"></div>
-  <div class="bg-spot two"></div>
+<div class="toggle">
+    <button onclick="toggleMode()">Toggle Light/Dark</button>
+</div>
 
-  <div class="wrap">
-    <header>
-      <div>
-        <h1>Ultra Image Compressor</h1>
-        <div class="small">Same-format automatic preview → then two further-reduce controls</div>
-      </div>
-      <div>
-        <div class="credit" id="credit">C r e a t e d &nbsp; b y &nbsp; A n i m e s h<span class="sweep"></span></div>
-      </div>
-    </header>
+<div class="container">
+    <h1>Auto Image Size Reducer</h1>
 
-    <!-- Upload area -->
-    <div class="drop-box" id="dropBox" title="Tap or drop files (mobile friendly)">
-      Tap or Drop Files
+    <div id="drop-area" onclick="fileInput.click()">
+        Tap or Drop Image Here
     </div>
-    <input id="fileInput" type="file" accept="image/*" multiple style="display:none" />
+    <input id="file-input" type="file" accept="image/*" class="hidden-input" />
 
-    <div class="controls">
-      <button class="btn primary" id="processAllBtn">Generate Default Previews</button>
-      <button class="btn ghost" id="clearBtn">Clear All</button>
-      <button class="btn ghost" id="downloadZipBtn" style="display:none">Download All as ZIP</button>
-      <button class="btn ghost" id="modeToggle" title="Toggle Dark/Light">Toggle Light</button>
-    </div>
+    <button onclick="clearAll()">Clear All</button>
 
-    <!-- grid of files -->
-    <div class="grid" id="grid"></div>
+    <div id="results"></div>
 
-    <footer>
-      <div class="small">All processing happens locally — images never leave your device</div>
-    </footer>
-  </div>
+    <div class="credit">Created by Animesh</div>
+</div>
 
 <script>
-/* Implementation notes:
- - Default automatic preview flow per file:
-   * Try same-resolution quality sequence: 0.7, 0.6, 0.5
-   * If none smaller, try resolution+quality combinations: scale 0.9+q0.7, 0.75+q0.6, 0.5+q0.6, 0.3+q0.5
-   * Stop when a strictly smaller Blob is found. If none, show "No reduction possible".
- - After default preview exists, show two explicit "Further reduce" buttons:
-   1) Further reduce Quality -> 0.3 (same resolution)
-   2) Further reduce Scale->0.5 + Q0.6
- - All sizes shown in KB (MB)
- - Download all ZIP collects produced outputs (only outputs that are strictly smaller)
-*/
+const fileInput = document.getElementById("file-input");
+const dropArea = document.getElementById("drop-area");
+const results = document.getElementById("results");
 
-const dropBox = document.getElementById('dropBox');
-const fileInput = document.getElementById('fileInput');
-const grid = document.getElementById('grid');
-const processAllBtn = document.getElementById('processAllBtn');
-const clearBtn = document.getElementById('clearBtn');
-const downloadZipBtn = document.getElementById('downloadZipBtn');
-const modeToggle = document.getElementById('modeToggle');
-
-let files = []; // File objects
-let outputs = {}; // index -> list of outputs produced for that file
-
-// Helpers
-function formatBytes(b){
-  const kb = (b/1024).toFixed(2);
-  const mb = (b/1024/1024).toFixed(2);
-  return `${kb} KB (${mb} MB)`;
-}
-function extFromFile(f){ return (f.name.split('.').pop()||'jpg').toLowerCase(); }
-function dataURLtoBlob(dataurl){
-  const arr = dataurl.split(',');
-  const mime = arr[0].match(/:(.*?);/)[1];
-  const bstr = atob(arr[1]);
-  let n = bstr.length;
-  const u8 = new Uint8Array(n);
-  while(n--) u8[n] = bstr.charCodeAt(n);
-  return new Blob([u8], {type:mime});
-}
-function blobToDataURL(blob){ return new Promise(res=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.readAsDataURL(blob); }); }
-function fileToDataURL(file){ return new Promise(res=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.readAsDataURL(file); }); }
-function dataURLToImage(dataURL){ return new Promise((res,rej)=>{ const i=new Image(); i.onload=()=>res(i); i.onerror=rej; i.src=dataURL; }); }
-function escapeHtml(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-
-// drag & click
-dropBox.addEventListener('click', ()=> fileInput.click());
-dropBox.addEventListener('dragover', e=>{ e.preventDefault(); dropBox.style.boxShadow='0 12px 50px rgba(255,60,120,0.12)'; });
-dropBox.addEventListener('dragleave', ()=>{ dropBox.style.boxShadow='none'; });
-dropBox.addEventListener('drop', e=>{
-  e.preventDefault(); dropBox.style.boxShadow='none';
-  const list = Array.from(e.dataTransfer.files).filter(f=>f.type.startsWith('image/'));
-  if(list.length) addFiles(list);
-});
-fileInput.addEventListener('change', e=>{
-  const list = Array.from(e.target.files).filter(f=>f.type.startsWith('image/'));
-  if(list.length) addFiles(list);
+dropArea.addEventListener("dragover", e => { e.preventDefault(); });
+dropArea.addEventListener("drop", e => {
+    e.preventDefault();
+    processFile(e.dataTransfer.files[0]);
 });
 
-// add files
-function addFiles(list){
-  const start = files.length;
-  files = files.concat(list);
-  for(let i=0;i<list.length;i++){
-    createCard(start + i, list[i]);
-  }
-  window.scrollTo({top:document.body.scrollHeight, behavior:'smooth'});
+fileInput.addEventListener("change", () => {
+    processFile(fileInput.files[0]);
+});
+
+/* Toggle Light/Dark Mode */
+function toggleMode() {
+    document.body.classList.toggle("light");
 }
 
-// create per-file UI card
-function createCard(index, file){
-  const card = document.createElement('div'); card.className='card'; card.id = 'card-'+index;
-  const reader = new FileReader();
-  reader.onload = ()=>{
-    const dataURL = reader.result;
-    card.innerHTML = `
-      <div class="row">
-        <div class="thumb"><img src="${dataURL}" alt="thumb"></div>
-        <div class="meta">
-          <div class="title">${escapeHtml(file.name)}</div>
-          <div class="info">Original: <b>${extFromFile(file)}</b> • ${file.type} • ${formatBytes(file.size)}</div>
-          <div class="status" id="status-${index}">Ready</div>
-        </div>
-      </div>
-      <div class="outputs" id="outputs-${index}"></div>
+/* Clear All */
+function clearAll() {
+    results.innerHTML = "";
+    fileInput.value = "";
+}
+
+/* Format size in KB + MB */
+function formatSize(bytes) {
+    const kb = (bytes / 1024).toFixed(2);
+    const mb = (bytes / (1024 * 1024)).toFixed(2);
+    return `${kb} KB (${mb} MB)`;
+}
+
+/* Compress Utility */
+async function compressImage(file, quality = 0.7, scale = 1) {
+    return new Promise(resolve => {
+        const img = new Image();
+        img.onload = () => {
+            const canvas = document.createElement("canvas");
+            canvas.width = img.width * scale;
+            canvas.height = img.height * scale;
+
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+            canvas.toBlob(
+                blob => {
+                    resolve({
+                        blob,
+                        url: URL.createObjectURL(blob),
+                        size: blob.size,
+                        width: canvas.width,
+                        height: canvas.height
+                    });
+                },
+                "image/jpeg",
+                quality
+            );
+        };
+        img.src = URL.createObjectURL(file);
+    });
+}
+
+/* Stage 3 auto-fallback scale reducing */
+async function stage3Auto(originalFile) {
+    let scales = [0.6, 0.5, 0.4, 0.3];
+    for (let s of scales) {
+        let out = await compressImage(originalFile, 0.6, s);
+        if (out.size < originalFile.size) return out;
+    }
+    return null;
+}
+
+/* MAIN PROCESSOR */
+async function processFile(file) {
+    if (!file) return;
+
+    results.innerHTML = "<h3>Processing…</h3>";
+
+    const originalSize = file.size;
+
+    // Stage 1: Q70
+    let stage1 = await compressImage(file, 0.7, 1);
+
+    // Stage 2: Q30
+    let stage2 = await compressImage(file, 0.3, 1);
+
+    // Stage 3: auto scale + Q60
+    let stage3 = await stage3Auto(file);
+
+    results.innerHTML = ""; // clear processing message
+
+    addStageOutput(file, "stage1", stage1);
+    addStageOutput(file, "stage2", stage2);
+    if (stage3) addStageOutput(file, "stage3", stage3);
+}
+
+/* Display + ZIP + Email */
+function addStageOutput(originalFile, stageName, output) {
+    if (output.size >= originalFile.size) return;
+
+    const section = document.createElement("div");
+    section.className = "result-section";
+
+    const newName = originalFile.name.replace(/\.[^.]+$/, "") + `_${stageName}.jpg`;
+
+    const blobFile = new File([output.blob], newName, { type: "image/jpeg" });
+
+    section.innerHTML = `
+        <h3>${stageName.toUpperCase()}</h3>
+        <img class="preview-img" src="${output.url}" />
+
+        <p><b>Resolution:</b> ${output.width} × ${output.height}</p>
+        <p><b>Output Size:</b> ${formatSize(output.size)}</p>
+        <p><b>Reduction:</b> 
+            ${((1 - output.size / originalFile.size) * 100).toFixed(1)}%
+        </p>
+
+        <button onclick="downloadFile('${newName}', '${output.url}')">Download</button>
+        <button onclick="downloadZipStage('${stageName}')">Download ZIP (Stage Only)</button>
+        <button onclick="emailFile('${newName}', '${output.url}')">Email File</button>
     `;
-    grid.appendChild(card);
 
-    // After card ready, we can auto-run default preview for this file if desired
-    // (we'll wait for user pressing Generate Default Previews button, but could also auto-run)
-  };
-  reader.readAsDataURL(file);
+    results.appendChild(section);
+
+    // Save files per-stage
+    if (!window.stageFiles) window.stageFiles = {};
+    if (!window.stageFiles[stageName]) window.stageFiles[stageName] = [];
+    window.stageFiles[stageName].push(blobFile);
 }
 
-// Clear All
-clearBtn.addEventListener('click', ()=>{
-  if(!confirm('Clear all files and results?')) return;
-  files = []; outputs = {}; grid.innerHTML=''; downloadZipBtn.style.display='none'; fileInput.value='';
-});
-
-// Toggle dark/light (simple)
-modeToggle.addEventListener('click', ()=>{
-  if(document.documentElement.style.filter === 'invert(1)'){
-    document.documentElement.style.filter = '';
-    modeToggle.textContent = 'Toggle Light';
-  } else {
-    document.documentElement.style.filter = 'invert(1) hue-rotate(180deg)';
-    modeToggle.textContent = 'Toggle Dark';
-  }
-});
-
-// Process default previews for all files
-processAllBtn.addEventListener('click', async ()=>{
-  if(files.length===0){ alert('No files loaded. Drag or upload images first.'); return; }
-  processAllBtn.disabled = true; processAllBtn.textContent = 'Processing...';
-  for(let i=0;i<files.length;i++){
-    await generateDefaultPreview(i, files[i]);
-  }
-  processAllBtn.disabled = false; processAllBtn.textContent = 'Generate Default Previews';
-  // show ZIP button if outputs exist
-  downloadZipBtn.style.display = (Object.keys(outputs).length>0) ? 'inline-block' : 'none';
-});
-
-// Download all as ZIP
-downloadZipBtn.addEventListener('click', async ()=>{
-  const zip = new JSZip();
-  let added = 0;
-  for(const idx in outputs){
-    for(const out of outputs[idx]){
-      zip.file(out.name, out.blob);
-      added++;
-    }
-  }
-  if(added===0){ alert('No outputs to zip. Generate previews first.'); return; }
-  downloadZipBtn.textContent = 'Preparing ZIP...';
-  const content = await zip.generateAsync({type:'blob'});
-  const url = URL.createObjectURL(content);
-  const a = document.createElement('a'); a.href = url; a.download = 'compressed_images.zip'; a.click(); a.remove();
-  downloadZipBtn.textContent = 'Download All as ZIP';
-});
-
-// DEFAULT PREVIEW SEQUENCE (per the user's request)
-const defaultSequence = [
-  {mode:'same', quality:0.7},
-  {mode:'same', quality:0.6},
-  {mode:'same', quality:0.5},
-  {mode:'reduced', scale:0.9, quality:0.7},
-  {mode:'reduced', scale:0.75, quality:0.6},
-  {mode:'reduced', scale:0.5, quality:0.6},
-  {mode:'reduced', scale:0.3, quality:0.5}
-];
-
-// function to generate default preview for a single file
-async function generateDefaultPreview(index, file){
-  const statusEl = document.getElementById('status-'+index);
-  const outContainer = document.getElementById('outputs-'+index);
-  outContainer.innerHTML = ''; statusEl.textContent = 'Generating default preview...';
-
-  const origBytes = file.size;
-  const dataURL = await fileToDataURL(file);
-  const img = await dataURLToImage(dataURL);
-
-  let found = null;
-  for(const step of defaultSequence){
-    const res = await attemptCompression(img, file.type, step);
-    if(res && res.blob && res.blob.size < origBytes){
-      found = {res, step}; break;
-    }
-  }
-
-  if(!found){
-    statusEl.textContent = 'No reduction possible (default attempts)';
-    outContainer.innerHTML = `<div class="out"><div class="label">No default reduction possible without heavy degradation.</div>
-      <div class="small">Try manual further reduction options if you accept lower quality.</div></div>`;
-    return;
-  }
-
-  // show default preview and two further-reduce buttons
-  statusEl.textContent = 'Default preview generated';
-  const {res, step} = found;
-  const percent = (((origBytes - res.blob.size)/origBytes) * 100).toFixed(1);
-
-  const outBlock = document.createElement('div'); outBlock.className='out';
-  outBlock.innerHTML = `
-    <div class="label">Default: ${step.mode==='same' ? 'Reducing Quality' : 'Reducing Resolution + Quality'}</div>
-    <div class="small">Format: ${res.blob.type} • Resolution: ${res.w} × ${res.h}</div>
-    <img class="preview" src="${res.dataURL}">
-    <div style="margin-top:8px"><strong>Size:</strong> ${formatBytes(res.blob.size)} &nbsp; <strong>Reduced:</strong> ${percent}%</div>
-    <div style="margin-top:8px" id="actions-${index}"></div>
-  `;
-  outContainer.appendChild(outBlock);
-
-  // save output
-  storeOutput(index, file, res.blob, `Default_${Math.round(Math.random()*1e6)}.${res.blob.type.split('/').pop()}`);
-
-  // create two further reduce buttons (quality30, scale50+q60)
-  const actions = document.getElementById(`actions-${index}`);
-  const btnQ30 = document.createElement('button'); btnQ30.className='btn ghost'; btnQ30.textContent = 'Further Reduce — Quality 30%';
-  const btnScale50 = document.createElement('button'); btnScale50.className='btn ghost'; btnScale50.textContent = 'Further Reduce — Scale 50% + Q60';
-  actions.appendChild(btnQ30); actions.appendChild(btnScale50);
-
-  btnQ30.addEventListener('click', async ()=>{
-    btnQ30.disabled = true; btnQ30.textContent = 'Processing...';
-    const tryRes = await attemptCompression(img, file.type, {mode:'same', quality:0.3});
-    if(tryRes && tryRes.blob && tryRes.blob.size < origBytes){
-      const pct = (((origBytes - tryRes.blob.size)/origBytes)*100).toFixed(1);
-      const bURL = tryRes.dataURL;
-      const block = document.createElement('div'); block.className='out';
-      block.innerHTML = `<div class="label">Further reduced (Q30)</div>
-        <div class="small">Format: ${tryRes.blob.type} • Res: ${tryRes.w} × ${tryRes.h}</div>
-        <img class="preview" src="${bURL}">
-        <div style="margin-top:8px"><strong>Size:</strong> ${formatBytes(tryRes.blob.size)} &nbsp; <strong>Reduced:</strong> ${pct}%</div>
-        <div style="margin-top:8px"><a class="btn primary" href="#" download>Download</a></div>`;
-      const dl = block.querySelector('a'); const name = file.name.replace(/\.[^/.]+$/, '') + `_q30.${tryRes.blob.type.split('/').pop()}`;
-      dl.href = URL.createObjectURL(tryRes.blob); dl.download = name;
-      outContainer.appendChild(block);
-      storeOutput(index, file, tryRes.blob, name);
-      downloadZipBtn.style.display = 'inline-block';
-    } else {
-      alert('Further reduction to Q30 did not produce a smaller file.');
-    }
-    btnQ30.disabled = false; btnQ30.textContent = 'Further Reduce — Quality 30%';
-  });
-
-  btnScale50.addEventListener('click', async ()=>{
-    btnScale50.disabled = true; btnScale50.textContent = 'Processing...';
-    const tryRes = await attemptCompression(img, file.type, {mode:'reduced', scale:0.5, quality:0.6});
-    if(tryRes && tryRes.blob && tryRes.blob.size < origBytes){
-      const pct = (((origBytes - tryRes.blob.size)/origBytes)*100).toFixed(1);
-      const bURL = tryRes.dataURL;
-      const block = document.createElement('div'); block.className='out';
-      block.innerHTML = `<div class="label">Further reduced (Scale50% + Q60)</div>
-        <div class="small">Format: ${tryRes.blob.type} • Res: ${tryRes.w} × ${tryRes.h}</div>
-        <img class="preview" src="${bURL}">
-        <div style="margin-top:8px"><strong>Size:</strong> ${formatBytes(tryRes.blob.size)} &nbsp; <strong>Reduced:</strong> ${pct}%</div>
-        <div style="margin-top:8px"><a class="btn primary" href="#" download>Download</a></div>`;
-      const dl = block.querySelector('a'); const name = file.name.replace(/\.[^/.]+$/, '') + `_s50_q60.${tryRes.blob.type.split('/').pop()}`;
-      dl.href = URL.createObjectURL(tryRes.blob); dl.download = name;
-      outContainer.appendChild(block);
-      storeOutput(index, file, tryRes.blob, name);
-      downloadZipBtn.style.display = 'inline-block';
-    } else {
-      alert('Further reduction (scale 50% + Q60) did not produce a smaller file.');
-    }
-    btnScale50.disabled = false; btnScale50.textContent = 'Further Reduce — Scale 50% + Q60';
-  });
-
-} // generateDefaultPreview
-
-// attemptCompression: given an Image, fileMime (original), and step (mode/quality/scale), return {blob, dataURL, w, h} or null
-async function attemptCompression(img, origMime, step){
-  // preserve original mime when possible; if png and we pass quality, many browsers ignore quality for PNG.
-  // We'll try to preserve mime, but fallback to JPEG if the browser can't encode with quality.
-  const canvas = document.createElement('canvas');
-  const scale = step.mode==='reduced' ? (step.scale || 1) : 1;
-  const w = Math.max(1, Math.round(img.width * scale));
-  const h = Math.max(1, Math.round(img.height * scale));
-  canvas.width = w; canvas.height = h;
-  const ctx = canvas.getContext('2d');
-  ctx.imageSmoothingQuality = 'high';
-  ctx.drawImage(img, 0, 0, w, h);
-
-  let mime = origMime || 'image/jpeg';
-  let q = (step.quality!==undefined) ? step.quality : 0.9;
-
-  // If original mime isn't one that accepts quality (png), we'll still try to request quality — if browser errors, fallback to jpeg
-  let dataURL;
-  try {
-    dataURL = canvas.toDataURL(mime, q);
-  } catch(e){
-    mime = 'image/jpeg';
-    dataURL = canvas.toDataURL(mime, q);
-  }
-
-  // Convert to blob for accurate size
-  const blob = dataURLtoBlob(dataURL);
-  return {blob, dataURL, w, h, mime};
+/* Download single */
+function downloadFile(name, url) {
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = name;
+    a.click();
 }
 
-// store output
-function storeOutput(index, file, blob, name){
-  outputs[index] = outputs[index] || [];
-  outputs[index].push({name, blob});
+/* Download ZIP for stage */
+async function downloadZipStage(stageName) {
+    const files = window.stageFiles?.[stageName];
+    if (!files || files.length === 0) return alert("No files.");
+
+    const zip = new JSZip();
+    files.forEach(f => zip.file(f.name, f));
+
+    const blob = await zip.generateAsync({ type: "blob" });
+
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `${stageName}.zip`;
+    a.click();
 }
 
-// utility to read files array from user (used by processAll button)
-function loadFilesFromGrid(){
-  // when user added files using addFiles() earlier we already populated 'files' array;
-  // nothing else needed
+/* Email button */
+function emailFile(name, url) {
+    const mail = `mailto:?subject=Reduced Image&body=Your reduced file (${name}) is here: ${url}`;
+    window.location.href = mail;
 }
 
-// fileToDataURL and dataURLToImage helpers provided above
-
-// Add capability: when a card is created we didn't add file to `files` array. Ensure addFiles populated it (we already do).
-// Implementation: when addFiles() is called, files array is extended. If user added files by drag/drop earlier, addFiles used.
-// ensure createCard was called with matching index and file.
-
-// For convenience: if a user clicks one of the per-card "run-same" or "run-reduced" buttons (we built default UI only),
-// but also allow processing a single file by calling generateDefaultPreview(fileIndex,file).
-
-// --- End of main script
 </script>
+
+<!-- JSZip CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
+
 </body>
 </html>
