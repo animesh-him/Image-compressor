@@ -1,186 +1,210 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Image Compressor – Created by Animesh</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Image Compressor</title>
+
 <style>
-    body { margin:0; font-family: Arial, sans-serif; background:#000; color:#fff; overflow-x:hidden; }.bg-anim {
-    position: fixed; top:0; left:0; width:100%; height:100%;
-    background: radial-gradient(circle at top left,#ff3cac,#562b7c,#2b86c5);
-    background-size: 200% 200%;
-    animation: glow 8s infinite alternate;
-    z-index: -1;
-}
-@keyframes glow { to { background-position: 100% 100%; } }
+    body {
+        margin:0;
+        padding:0;
+        background:#000;
+        font-family: 'Poppins', sans-serif;
+        color:white;
+        text-align:center;
+    }
 
-.container {
-    width: 90%; max-width:900px;
-    margin:40px auto;
-    background: rgba(0,0,0,0.55);
-    backdrop-filter: blur(12px);
-    padding:25px;
-    border-radius:18px;
-    box-shadow:0 0 25px rgba(255,255,255,0.2);
-}
+    .container {
+        padding:20px;
+    }
 
-.drop-zone {
-    width: 140px;
-    height: 70px;
-    margin:auto;
-    border:2px dashed #FF66CC;
-    border-radius:12px;
-    display:flex; align-items:center; justify-content:center;
-    background: rgba(255,255,255,0.06);
-    font-size:12px;
-    margin-bottom:20px;
-}
+    /* Neon Instagram Glow */
+    .neon-box {
+        width:170px;
+        height:85px;
+        margin:20px auto;
+        border-radius:15px;
+        background: rgba(255, 255, 255, 0.05);
+        border:2px dashed rgba(255,255,255,0.4);
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        cursor:pointer;
+        transition:0.3s;
+        box-shadow:0 0 8px #ff00ff, 0 0 12px #ff9900;
+    }
 
-.btn {
-    background: linear-gradient(45deg,#ff3cac,#784ba0,#2b86c5);
-    padding:10px 18px;
-    border:none;
-    border-radius:8px;
-    cursor:pointer;
-    color:white;
-    margin:6px;
-    font-size:14px;
-}
+    .neon-box:hover {
+        box-shadow:0 0 15px #ff00ff, 0 0 20px #ff9900;
+    }
 
-.credit { text-align:center; margin-top:20px; font-family:"Brush Script MT", cursive; font-size:18px; opacity:0.8; }
+    #fileInput { display:none; }
 
-.preview-img { max-width:100%; border-radius:12px; margin-top:10px; }
+    #info {
+        margin-top:10px;
+        font-size:15px;
+        color:#bbb;
+    }
 
-.result-box {
-    background: rgba(255,255,255,0.08);
-    padding:15px;
-    border-radius:10px;
-    margin-top:20px;
-}
+    #outputBox {
+        margin-top:20px;
+        display:none;
+    }
 
+    .download-btn {
+        display:inline-block;
+        margin-top:15px;
+        padding:10px 22px;
+        border-radius:12px;
+        background:linear-gradient(45deg,#ff00cc,#ff9900,#ff006a);
+        color:white;
+        font-weight:600;
+        text-decoration:none;
+        box-shadow:0 0 10px #ff00cc;
+    }
 </style>
 </head>
+
 <body>
-<div class="bg-anim"></div>
 <div class="container">
-<h2>Image Compressor</h2><div id="dropZone" class="drop-zone">Drag Files</div>
-<input id="fileInput" type="file" accept="image/*" style="display:none;" />
-<button class="btn" onclick="document.getElementById('fileInput').click()">Upload</button>
-<button class="btn" onclick="clearAll()">Clear All</button><div id="originalInfo"></div>
-<div id="results"></div><div class="credit">Created by Animesh</div>
-</div><script>
-let selectedFile = null;
 
-// Utility: Convert DataURL to Blob
-function dataURLtoBlob(dataURL) {
-    const byteString = atob(dataURL.split(',')[1]);
-    const mimeString = dataURL.split(',')[0].split(':')[1].split(';')[0];
-    const ab = new ArrayBuffer(byteString.length);
-    const ia = new Uint8Array(ab);
-    for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
-    return new Blob([ab], { type: mimeString });
-}
+    <h2>Smart Image Compressor</h2>
+    
+    <!-- Drag/Click Box -->
+    <div class="neon-box" id="dropZone">
+        Tap or Drop File
+    </div>
 
-// Drag events
-const dropZone = document.getElementById("dropZone");
-dropZone.addEventListener("dragover", (e)=>{ e.preventDefault(); dropZone.style.borderColor="#fff"; });
-dropZone.addEventListener("dragleave", ()=>{ dropZone.style.borderColor="#FF66CC"; });
-dropZone.addEventListener("drop", (e)=>{
-    e.preventDefault();
-    selectedFile = e.dataTransfer.files[0];
-    processFile();
-});
+    <input type="file" id="fileInput" accept="image/*">
 
-document.getElementById("fileInput").addEventListener("change", function(){
-    selectedFile = this.files[0];
-    processFile();
-});
+    <div id="info"></div>
 
-function clearAll(){
-    selectedFile = null;
-    document.getElementById("originalInfo").innerHTML="";
-    document.getElementById("results").innerHTML="";
-}
+    <div id="outputBox">
+        <h3>Compressed File Ready</h3>
+        <div id="resultSizes"></div>
+        <a id="downloadLink" class="download-btn" download="compressed.jpg">Download</a>
+    </div>
 
+</div>
+
+<script>
 function formatSize(bytes) {
-    const kb = (bytes/1024).toFixed(2);
-    const mb = (bytes/1024/1024).toFixed(2);
+    let kb = (bytes / 1024).toFixed(2);
+    let mb = (bytes / 1024 / 1024).toFixed(2);
     return `${kb} KB (${mb} MB)`;
 }
 
-function processFile(){
-    if(!selectedFile) return;
+async function compressImage(file) {
 
-    const img = new Image();
-    const reader = new FileReader();
-    reader.onload = (e)=>{ img.src = e.target.result; };
-    reader.readAsDataURL(selectedFile);
+    const maxSizeMB = 2;  // target <= 2MB
+    const maxBytes = maxSizeMB * 1024 * 1024;
 
-    img.onload = ()=>{
-        const origW = img.width;
-        const origH = img.height;
-        const origBytes = selectedFile.size;
-        const ext = selectedFile.name.split('.').pop().toLowerCase();
+    return new Promise(resolve => {
 
-        document.getElementById("originalInfo").innerHTML = `
-            <h3>Original Image</h3>
-            <img src="${img.src}" class="preview-img">
-            <p><b>Format:</b> ${ext}</p>
-            <p><b>Resolution:</b> ${origW} x ${origH}</p>
-            <p><b>Size:</b> ${formatSize(origBytes)}</p>
-        `;
+        const img = new Image();
+        const reader = new FileReader();
 
-        generateReduced(img, ext, origBytes, origW, origH);
-    }
+        reader.onload = e => {
+            img.src = e.target.result;
+        };
+
+        img.onload = () => {
+
+            let canvas = document.createElement('canvas');
+            let ctx = canvas.getContext('2d');
+
+            // scale down if too large
+            let scale = 1;
+            const MAX_DIM = 2000;
+
+            if (img.width > MAX_DIM || img.height > MAX_DIM) {
+                scale = Math.min(MAX_DIM / img.width, MAX_DIM / img.height);
+            }
+
+            canvas.width = img.width * scale;
+            canvas.height = img.height * scale;
+
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+            let quality = 0.9;  
+            let compressed = canvas.toDataURL('image/jpeg', quality);
+
+            while (compressed.length > maxBytes && quality > 0.08) {
+                quality -= 0.08;
+                compressed = canvas.toDataURL('image/jpeg', quality);
+            }
+
+            // If still too large → reduce resolution more
+            let blob = dataURLtoBlob(compressed);
+            if (blob.size > maxBytes) {
+                let extraScale = 0.8;
+                while (blob.size > maxBytes && extraScale > 0.30) {
+                    canvas.width *= extraScale;
+                    canvas.height *= extraScale;
+
+                    ctx = canvas.getContext("2d");
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                    compressed = canvas.toDataURL("image/jpeg", 0.7);
+                    blob = dataURLtoBlob(compressed);
+                    extraScale -= 0.15;
+                }
+            }
+
+            resolve(blob);
+        };
+
+        reader.readAsDataURL(file);
+    });
 }
 
-function generateReduced(img, ext, origBytes, origW, origH){
-    const canvas = document.createElement("canvas");
+function dataURLtoBlob(dataurl) {
+    let arr = dataurl.split(","),
+    mime = arr[0].match(/:(.*?);/)[1],
+    bstr = atob(arr[1]),
+    n = bstr.length,
+    u8arr = new Uint8Array(n);
 
-    const newW = Math.floor(origW * 0.50);
-    const newH = Math.floor(origH * 0.50);
+    while (n--) u8arr[n] = bstr.charCodeAt(n);
+    return new Blob([u8arr], { type: mime });
+}
 
-    canvas.width = newW;
-    canvas.height = newH;
-    const ctx = canvas.getContext("2d");
-    ctx.drawImage(img, 0,0,newW,newH);
+document.getElementById("dropZone").onclick = () => {
+    document.getElementById("fileInput").click();
+};
 
-    let quality = 0.8;
-    let reducedBlob = null;
-    let reducedBytes = Infinity;
-    let dataURL;
+document.getElementById("dropZone").ondragover = e => {
+    e.preventDefault();
+};
 
-    while (quality > 0.1) {
-        dataURL = canvas.toDataURL(`image/${ext}`, quality);
-        reducedBlob = dataURLtoBlob(dataURL);
-        reducedBytes = reducedBlob.size;
+document.getElementById("dropZone").ondrop = e => {
+    e.preventDefault();
+    handleFile(e.dataTransfer.files[0]);
+};
 
-        if (reducedBytes < origBytes * 0.98) break; // ensure reduction
-        quality -= 0.1;
-    }
+document.getElementById("fileInput").onchange = e => {
+    handleFile(e.target.files[0]);
+};
 
-    if (reducedBytes >= origBytes) {
-        document.getElementById("results").innerHTML = `
-            <div class='result-box'>
-                <h3>Compression Failed</h3>
-                <p>The compressed image became larger. No output is generated.</p>
-            </div>
-        `;
-        return;
-    }
+async function handleFile(file) {
+    if (!file) return;
 
-    const percent = (((origBytes - reducedBytes)/origBytes) * 100).toFixed(1);
+    document.getElementById("info").innerHTML =
+        `<b>Original Size:</b> ${formatSize(file.size)}`;
 
-    document.getElementById("results").innerHTML = `
-        <div class='result-box'>
-            <h3>Reduced Output</h3>
-            <img class='preview-img' src='${dataURL}' />
-            <p><b>Format:</b> ${ext}</p>
-            <p><b>Resolution:</b> ${newW} x ${newH}</p>
-            <p><b>Size:</b> ${formatSize(reducedBytes)}</p>
-            <p><b>Reduced By:</b> ${percent}%</p>
-            <a class='btn' download='reduced.${ext}' href='${dataURL}'>Download</a>
-        </div>
+    const compressedBlob = await compressImage(file);
+
+    document.getElementById("resultSizes").innerHTML = `
+        <b>Compressed Size:</b> ${formatSize(compressedBlob.size)}
     `;
+
+    const url = URL.createObjectURL(compressedBlob);
+    document.getElementById("downloadLink").href = url;
+
+    document.getElementById("outputBox").style.display = "block";
 }
-</script></body>
+</script>
+
+</body>
 </html>
